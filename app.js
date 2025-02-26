@@ -36,7 +36,8 @@ async function getTop20Coins() {
         coin.symbol,
         `<span class="price ${priceClass}" data-coin="${coin.symbol}">$${lastPrice}</span>`,
         volume,
-        `${changePercent}%`
+        `${changePercent}%`,
+        `<a class="btn btn-dark" data-coin="${coin.symbol}" href="./graph-price.html?coin=${coin.symbol}">Ver</a>`
       ]).draw().node();
 
       // Actualizar el precio anterior para la próxima comparación
@@ -51,7 +52,7 @@ async function getTop20Coins() {
 
 async function cargarJSON() {
   try {
-    const response = await fetch('/es-ES.json'); // Ruta relativa o absoluta
+    const response = await fetch('./es-ES.json'); // Ruta relativa o absoluta
     const data = await response.json(); // Convertir a objeto JavaScript
     return data; // Asignar a una variable si lo deseas
   } catch (error) {
@@ -73,7 +74,7 @@ cargarJSON().then(data => {
   });
 
   getTop20Coins();
-  setInterval(getTop20Coins, 10000);
+  setInterval(getTop20Coins, 5000);
 });
 
 
