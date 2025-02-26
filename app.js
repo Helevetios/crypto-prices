@@ -43,3 +43,11 @@ $(document).ready(function () {
   // Actualizar datos cada 10 segundos
   setInterval(getTop20Coins, 10000);
 });
+
+document.addEventListener('DOMContentLoaded', () => {
+  const refresh = document.getElementById('refresh-button');
+
+  refresh.addEventListener('click', function () {
+    getTop20Coins();
+  });
+});
