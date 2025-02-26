@@ -1,27 +1,46 @@
 let table;
+const previousPrices = {};
 
 async function getTop20Coins() {
   try {
     const response = await fetch('https://api.binance.com/api/v3/ticker/24hr');
     const data = await response.json();
 
-    // Filtrar solo pares USDT y ordenar por precio descendente
     const top20 = data
       .filter(coin => coin.symbol.endsWith('USDT'))
       .sort((a, b) => parseFloat(b.lastPrice) - parseFloat(a.lastPrice))
       .slice(0, 20);
 
-    // Limpiar y agregar nuevas filas a la tabla
     table.clear();
     top20.forEach(coin => {
-      table.row.add([
+      const lastPrice = parseFloat(coin.lastPrice).toFixed(2);
+      const volume = parseFloat(coin.volume).toLocaleString();
+      const changePercent = parseFloat(coin.priceChangePercent).toFixed(2);
+
+      // Obtener el precio anterior
+      const previousPrice = previousPrices[coin.symbol];
+
+      // Determinar la clase de color
+      let priceClass = '';
+      if (previousPrice !== undefined) {
+        if (lastPrice > previousPrice) {
+          priceClass = 'price-up';
+        } else if (lastPrice < previousPrice) {
+          priceClass = 'price-down';
+        }
+      }
+
+      // Añadir la fila con la clase correspondiente
+      const row = table.row.add([
         coin.symbol,
-        `$${parseFloat(coin.lastPrice).toFixed(2)}`,
-        parseFloat(coin.volume).toLocaleString(),
-        `${parseFloat(coin.priceChangePercent).toFixed(2)}%`
-      ]);
+        `<span class="price ${priceClass}" data-coin="${coin.symbol}">$${lastPrice}</span>`,
+        volume,
+        `${changePercent}%`
+      ]).draw().node();
+
+      // Actualizar el precio anterior para la próxima comparación
+      previousPrices[coin.symbol] = lastPrice;
     });
-    table.draw();
 
   } catch (error) {
     console.error('Error fetching data:', error);
@@ -29,25 +48,18 @@ async function getTop20Coins() {
 }
 
 $(document).ready(function () {
-  // Inicializar DataTable
   table = $('#cryptoTable').DataTable({
     paging: true,
     searching: true,
     info: false,
-    order: [] // Para evitar que ordene automáticamente al recargar
+    order: []
   });
 
-  // Obtener datos al cargar la página
   getTop20Coins();
-
-  // Actualizar datos cada 10 segundos
   setInterval(getTop20Coins, 10000);
 });
 
 document.addEventListener('DOMContentLoaded', () => {
   const refresh = document.getElementById('refresh-button');
-
-  refresh.addEventListener('click', function () {
-    getTop20Coins();
-  });
+  refresh.addEventListener('click', getTop20Coins);
 });
